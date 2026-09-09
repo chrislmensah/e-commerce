@@ -36,9 +36,14 @@ export const paymentProviderEnum = pgEnum("payment_provider", [
   "flutterwave",
 ]);
 
+export const userRoleEnum = pgEnum("user_role", ["customer", "admin"]);
+
+
+
 // ─────────────────────────────────────────────────────────
 // USERS (customers)
 // ─────────────────────────────────────────────────────────
+
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -46,24 +51,58 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 255 }).notNull(),
   passwordHash: text("password_hash").notNull(),
   phone: varchar("phone", { length: 20 }),
+  role: userRoleEnum("role").default("customer").notNull(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   emailIdx: uniqueIndex("users_email_idx").on(table.email),
 }));
 
+
+export const sessions = pgTable("sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  tokenIdx: uniqueIndex("sessions_token_idx").on(table.token),
+}));
+
+export const accounts = pgTable("accounts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  password: text("password"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const verifications = pgTable("verifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, { fields: [sessions.userId], references: [users.id] }),
+}));
 // ─────────────────────────────────────────────────────────
 // ADMINS (separate login, single combined role)
 // ─────────────────────────────────────────────────────────
 
-export const admins = pgTable("admins", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  fullName: varchar("full_name", { length: 120 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull(),
-  passwordHash: text("password_hash").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => ({
-  emailIdx: uniqueIndex("admins_email_idx").on(table.email),
-}));
+// export const admins = pgTable("admins", {
+//   id: uuid("id").defaultRandom().primaryKey(),
+//   fullName: varchar("full_name", { length: 120 }).notNull(),
+//   email: varchar("email", { length: 255 }).notNull(),
+//   passwordHash: text("password_hash").notNull(),
+//   createdAt: timestamp("created_at").defaultNow().notNull(),
+// }, (table) => ({
+//   emailIdx: uniqueIndex("admins_email_idx").on(table.email),
+// }));
 
 // ─────────────────────────────────────────────────────────
 // CATEGORIES
