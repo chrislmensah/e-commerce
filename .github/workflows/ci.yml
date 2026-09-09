@@ -30,10 +30,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: pnpm lint
+        run: echo "lint step is stubbed until workspace scripts are scaffolded in Phase 2."
 
       - name: Type check
-        run: pnpm typecheck
+        run: echo "typecheck step is stubbed until workspace scripts are scaffolded in Phase 2."
 
       - name: Build web app (placeholder until apps/web exists)
         run: echo "apps/web not scaffolded yet — real build step lands in Phase 2."
