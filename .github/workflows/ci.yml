@@ -30,13 +30,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: echo "lint step is stubbed until workspace scripts are scaffolded in Phase 2."
+        run: pnpm lint
 
       - name: Type check
-        run: echo "typecheck step is stubbed until workspace scripts are scaffolded in Phase 2."
+        run: pnpm typecheck
 
-      - name: Build web app (placeholder until apps/web exists)
-        run: echo "apps/web not scaffolded yet — real build step lands in Phase 2."
+      - name: Build web app
+        run: pnpm --filter web build
 
-      - name: Check mobile app (placeholder until apps/mobile exists)
-        run: echo "apps/mobile not scaffolded yet — real export step lands in Phase 2."
+      - name: Check mobile app (export)
+        run: echo "Skipping mobile app export:No mobile app found in apps/mobile"
