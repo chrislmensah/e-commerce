@@ -1,2 +1,2 @@
-export { auth } from "./auth.js";
-export * from "./src/helpers.js";
+export { auth } from "./auth";
+export * from "./src/helpers";
