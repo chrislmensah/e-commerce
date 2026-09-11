@@ -1,4 +1,4 @@
-import { auth } from "./index"; // wherever your better-auth instance is exported
+import { auth } from "../index.js";
 import { headers } from "next/headers";
 
 export async function requireAuth() {
