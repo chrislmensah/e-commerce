@@ -28,7 +28,7 @@ The two apps (web and mobile) are built as separate frontends sharing one API an
 | Mobile | Expo (React Native), TypeScript |
 | Backend | Next.js API routes |
 | Database | PostgreSQL |
-| ORM | TBD — Prisma or Drizzle |
+| ORM | Drizzle |
 | Auth | TBD — e.g. better-auth / NextAuth |
 | Payments | Paystack or Flutterwave (local cards + mobile money) |
 | Hosting (web) | TBD — e.g. Vercel |
@@ -63,25 +63,25 @@ The two apps (web and mobile) are built as separate frontends sharing one API an
 - [ ] Add a target to the ruleset (Include default branch, or by pattern → `main`) so the rules actually apply
 
 ### Phase 1 — Lock remaining decisions
-- [ ] ORM: Prisma or Drizzle
+- [x] ORM: Drizzle
 - [ ] Auth: better-auth, NextAuth, or similar
 - [ ] Hosting: web (e.g. Vercel) + DB (e.g. Railway/Supabase)
 
 ### Phase 2 — Scaffold the real monorepo
-- [ ] `pnpm-workspace.yaml` at the root
-- [ ] `apps/web` — bare Next.js app with real `lint`/`typecheck`/`build` scripts
-- [ ] `apps/mobile` — bare Expo app
-- [ ] `packages/db` — schema + client using the chosen ORM
-- [ ] Run `pnpm install`, commit the real `pnpm-lock.yaml`
-- [ ] Swap the CI workflow from the stub back to the real checks
+- [x] `pnpm-workspace.yaml` at the root
+- [x] `apps/web` — bare Next.js app with real `lint`/`typecheck`/`build` scripts
+- [x] `apps/mobile` — bare Expo app
+- [x] `packages/db` — schema + client using the chosen ORM
+- [x] Run `pnpm install`, commit the real `pnpm-lock.yaml`
+- [x] Swap the CI workflow from the stub back to the real checks
 
 ### Phase 3 — Database schema
-- [ ] Model users, products, variants, inventory, orders, order_items, admin roles
-- [ ] Write migrations with the chosen ORM
+- [x] Model users, products, variants, inventory, orders, order_items, admin roles
+- [x] Write migrations with the chosen ORM
 
 ### Phase 4 — Backend API
-- [ ] Product, cart, and order endpoints
-- [ ] Auth wired in (register, login, session)
+- [x] Product, cart, and order endpoints
+- [x] Auth wired in (register, login, session)
 - [ ] Admin-only routes protected by role
 
 ### Phase 5 — Storefront
@@ -151,7 +151,7 @@ Every pull request into `main` runs a GitHub Actions check (`.github/workflows/c
 ## Open Decisions
 
 - [ ] Brand/project name
-- [ ] ORM: Prisma vs Drizzle
+- [x] ORM: Drizzle (Selected)
 - [ ] Auth solution
 - [ ] Hosting provider(s)
 - [ ] Delivery/logistics approach

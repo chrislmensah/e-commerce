@@ -24,3 +24,5 @@ export const auth = betterAuth({
     enabled: true,
   },
 });
+
+export { requireAuth, requireAdmin } from "./helpers";

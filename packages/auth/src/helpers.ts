@@ -1,18 +1,18 @@
-import { auth } from "../index.js";
-import { headers } from "next/headers";
+import { auth } from "./index";
+import { headers as nextHeaders } from "next/headers";
 
-export async function requireAuth() {
-  const session = await auth.api.getSession({ headers: await headers() });
+export async function requireAuth(headers?: Headers) {
+  const h = headers || (await nextHeaders());
+  const session = await auth.api.getSession({ headers: h });
   if (!session) {
     return { session: null, error: new Response("Unauthorized", { status: 401 }) };
   }
   return { session, error: null };
 }
 
-export async function requireAdmin() {
-  const { session, error } = await requireAuth();
+export async function requireAdmin(headers?: Headers) {
+  const { session, error } = await requireAuth(headers);
   if (error) return { session: null, error };
-
   if (session.user.role !== "admin") {
     return { session: null, error: new Response("Forbidden", { status: 403 }) };
   }
