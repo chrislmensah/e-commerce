@@ -1,0 +1,10 @@
+{
+  "description": "A mobile-first e-commerce platform for Ghanaian customers to browse, shop, and manage clothing orders with seamless navigation and dark mode support.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
