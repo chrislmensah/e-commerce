@@ -1,4 +1,3 @@
-# e-commerce
 # [Brand Name] — E-Commerce Platform
 
 > Replace `[Brand Name]` above (and anywhere else it appears) once the brand name is locked in.
@@ -7,6 +6,7 @@
 
 A full e-commerce website and companion mobile app for a clothing brand, including a built-in admin/inventory panel. Website and app share a single backend API.
 
+- **Team:** 2 developers
 - **Status:** Planning / early development
 - **Target market:** Ghana (payments, currency, and delivery flows built around this)
 
@@ -29,10 +29,10 @@ The two apps (web and mobile) are built as separate frontends sharing one API an
 | Backend | Next.js API routes |
 | Database | PostgreSQL |
 | ORM | Drizzle |
-| Auth | TBD — e.g. better-auth / NextAuth |
+| Auth | better-auth (Drizzle adapter) |
 | Payments | Paystack or Flutterwave (local cards + mobile money) |
-| Hosting (web) | TBD — e.g. Vercel |
-| Hosting (DB) | TBD — e.g. Railway / Supabase |
+| Hosting (web) | Vercel |
+| Hosting (DB) | Neon (serverless Postgres, native Vercel integration) |
 
 ## Core Features
 
@@ -62,27 +62,27 @@ The two apps (web and mobile) are built as separate frontends sharing one API an
 - [ ] Patch the workflow (drop `cache: 'pnpm'`, stub install/lint/build) so the check runs green
 - [ ] Add a target to the ruleset (Include default branch, or by pattern → `main`) so the rules actually apply
 
-### Phase 1 — Lock remaining decisions
+### Phase 1 — Lock remaining decisions ✅
 - [x] ORM: Drizzle
-- [ ] Auth: better-auth, NextAuth, or similar
-- [ ] Hosting: web (e.g. Vercel) + DB (e.g. Railway/Supabase)
+- [x] Auth: better-auth
+- [x] Hosting: Vercel (web) + Neon (DB)
 
 ### Phase 2 — Scaffold the real monorepo
 - [x] `pnpm-workspace.yaml` at the root
 - [x] `apps/web` — bare Next.js app with real `lint`/`typecheck`/`build` scripts
-- [x] `apps/mobile` — bare Expo app
+- [ ] `apps/mobile` — bare Expo app
 - [x] `packages/db` — schema + client using the chosen ORM
 - [x] Run `pnpm install`, commit the real `pnpm-lock.yaml`
 - [x] Swap the CI workflow from the stub back to the real checks
 
 ### Phase 3 — Database schema
 - [x] Model users, products, variants, inventory, orders, order_items, admin roles
-- [x] Write migrations with the chosen ORM
+- [ ] Write migrations with the chosen ORM
 
-### Phase 4 — Backend API
+### Phase 4 — Backend API ✅
 - [x] Product, cart, and order endpoints
 - [x] Auth wired in (register, login, session)
-- [ ] Admin-only routes protected by role
+- [x] Admin-only routes protected by role
 
 ### Phase 5 — Storefront
 - [ ] Product listing + detail pages with variant selection
@@ -121,7 +121,7 @@ brand-name/
 │       ├── components/
 │       └── lib/
 ├── packages/
-│   ├── db/                       # shared schema + DB client (Prisma/Drizzle)
+│   ├── db/                       # shared schema + DB client (Drizzle)
 │   ├── types/                    # shared TypeScript types
 │   └── config/                   # shared ESLint/TS config
 ├── .github/
@@ -151,7 +151,4 @@ Every pull request into `main` runs a GitHub Actions check (`.github/workflows/c
 ## Open Decisions
 
 - [ ] Brand/project name
-- [x] ORM: Drizzle (Selected)
-- [ ] Auth solution
-- [ ] Hosting provider(s)
 - [ ] Delivery/logistics approach
