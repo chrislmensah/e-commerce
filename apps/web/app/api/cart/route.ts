@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { carts, cartItems } from "@e-commerce/db/schema";
 import { requireAuth } from "@e-commerce/auth";
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export async function GET() {
   const { session, error } = await requireAuth();
@@ -36,11 +36,22 @@ export async function POST(req: Request) {
     [cart] = await db.insert(carts).values({ userId: session.user.id }).returning();
   }
 
-  await db.insert(cartItems).values({
-    cartId: cart.id,
-    variantId,
-    quantity,
+  const existingItem = await db.query.cartItems.findFirst({
+    where: and(eq(cartItems.cartId, cart.id), eq(cartItems.variantId, variantId)),
   });
+
+  if (existingItem) {
+    await db
+      .update(cartItems)
+      .set({ quantity: existingItem.quantity + quantity })
+      .where(eq(cartItems.id, existingItem.id));
+  } else {
+    await db.insert(cartItems).values({
+      cartId: cart.id,
+      variantId,
+      quantity,
+    });
+  }
 
   return NextResponse.json({ message: "Item added to cart" });
 }
