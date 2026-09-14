@@ -9,6 +9,7 @@ import {
   boolean,
   timestamp,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -38,71 +39,92 @@ export const paymentProviderEnum = pgEnum("payment_provider", [
 
 export const userRoleEnum = pgEnum("user_role", ["customer", "admin"]);
 
-
-
 // ─────────────────────────────────────────────────────────
-// USERS (customers)
+// AUTH TABLES (managed by better-auth — table names, user.id
+// type (text), and core columns must match what better-auth
+// expects. role/phone are declared as additionalFields in
+// auth.ts so better-auth reads/writes them correctly.)
 // ─────────────────────────────────────────────────────────
 
-
-export const users = pgTable("users", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  fullName: varchar("full_name", { length: 120 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull(),
-  passwordHash: text("password_hash").notNull(),
-  phone: varchar("phone", { length: 20 }),
-  role: userRoleEnum("role").default("customer").notNull(),
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
+  image: text("image"),
+  role: userRoleEnum("role").default("customer").notNull(),
+  phone: varchar("phone", { length: 20 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => ({
-  emailIdx: uniqueIndex("users_email_idx").on(table.email),
-}));
-
-
-export const sessions = pgTable("sessions", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  token: text("token").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  ipAddress: varchar("ip_address", { length: 45 }),
-  userAgent: text("user_agent"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => ({
-  tokenIdx: uniqueIndex("sessions_token_idx").on(table.token),
-}));
-
-export const accounts = pgTable("accounts", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  accountId: text("account_id").notNull(),
-  providerId: text("provider_id").notNull(),
-  password: text("password"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
 });
 
-export const verifications = pgTable("verifications", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-});
+export const session = pgTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: timestamp("expires_at").notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (table) => ({
+  userIdIdx: index("session_userId_idx").on(table.userId),
+}),
+);
 
-export const sessionsRelations = relations(sessions, ({ one }) => ({
-  user: one(users, { fields: [sessions.userId], references: [users.id] }),
-}));
-// ─────────────────────────────────────────────────────────
-// ADMINS (separate login, single combined role)
-// ─────────────────────────────────────────────────────────
+export const account = pgTable(
+  "account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at"),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => ({
+  userIdIdx: index("account_userId_idx").on(table.userId),
+}),
+);
 
-// export const admins = pgTable("admins", {
-//   id: uuid("id").defaultRandom().primaryKey(),
-//   fullName: varchar("full_name", { length: 120 }).notNull(),
-//   email: varchar("email", { length: 255 }).notNull(),
-//   passwordHash: text("password_hash").notNull(),
-//   createdAt: timestamp("created_at").defaultNow().notNull(),
-// }, (table) => ({
-//   emailIdx: uniqueIndex("admins_email_idx").on(table.email),
-// }));
+export const verification = pgTable(
+  "verification",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => ({
+    identifierIdx: index("verification_identifier_idx").on(table.identifier),
+  }),
+);
 
 // ─────────────────────────────────────────────────────────
 // CATEGORIES
@@ -168,7 +190,7 @@ export const inventory = pgTable("inventory", {
 
 export const addresses = pgTable("addresses", {
   id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   region: varchar("region", { length: 60 }).notNull(),
   city: varchar("city", { length: 60 }).notNull(),
   landmarkOrGps: varchar("landmark_or_gps", { length: 150 }),
@@ -182,7 +204,7 @@ export const addresses = pgTable("addresses", {
 
 export const carts = pgTable("carts", {
   id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   userIdx: uniqueIndex("carts_user_idx").on(table.userId),
@@ -201,7 +223,7 @@ export const cartItems = pgTable("cart_items", {
 
 export const orders = pgTable("orders", {
   id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id").notNull().references(() => users.id),
+  userId: text("user_id").notNull().references(() => user.id),
   addressId: uuid("address_id").notNull().references(() => addresses.id),
   status: orderStatusEnum("status").default("pending").notNull(),
   totalAmount: numeric("total_amount", { precision: 10, scale: 2 }).notNull(),
@@ -237,13 +259,23 @@ export const payments = pgTable("payments", {
 });
 
 // ─────────────────────────────────────────────────────────
-// RELATIONS (lets Drizzle do nested/joined queries)
+// RELATIONS
 // ─────────────────────────────────────────────────────────
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
+  accounts: many(account),
   addresses: many(addresses),
   orders: many(orders),
-  cart: many(carts),
+  carts: many(carts),
+}));
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, { fields: [session.userId], references: [user.id] }),
+}));
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, { fields: [account.userId], references: [user.id] }),
 }));
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -259,7 +291,7 @@ export const productVariantsRelations = relations(productVariants, ({ one, many 
 }));
 
 export const cartsRelations = relations(carts, ({ one, many }) => ({
-  user: one(users, { fields: [carts.userId], references: [users.id] }),
+  user: one(user, { fields: [carts.userId], references: [user.id] }),
   items: many(cartItems),
 }));
 
@@ -269,7 +301,7 @@ export const cartItemsRelations = relations(cartItems, ({ one }) => ({
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
-  user: one(users, { fields: [orders.userId], references: [users.id] }),
+  user: one(user, { fields: [orders.userId], references: [user.id] }),
   address: one(addresses, { fields: [orders.addressId], references: [addresses.id] }),
   items: many(orderItems),
   payments: many(payments),
@@ -282,4 +314,9 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
 
 export const paymentsRelations = relations(payments, ({ one }) => ({
   order: one(orders, { fields: [payments.orderId], references: [orders.id] }),
+}));
+
+export const addressesRelations = relations(addresses, ({ one, many }) => ({
+  user: one(user, { fields: [addresses.userId], references: [user.id] }),
+  orders: many(orders),
 }));
