@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@e-commerce/db";
-import { user, session, account, verification } from "@e-commerce/db/schema";
+import { user, session, account, verification, rateLimit } from "@e-commerce/db/schema";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -13,6 +13,7 @@ export const auth = betterAuth({
       session: session,
       account: account,
       verification: verification,
+      rateLimit: rateLimit,
     },
   }),
 
@@ -31,6 +32,17 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  
+  rateLimit: {
+  enabled: true,
+  storage: "database",
+  window: 60,
+  max: 100,
+  customRules: {
+    "/sign-in/email": { window: 60, max: 5 },
+    "/sign-up/email": { window: 3600, max: 3 },
+  },
+},
 });
 
 export type Session = typeof auth.$Infer.Session;

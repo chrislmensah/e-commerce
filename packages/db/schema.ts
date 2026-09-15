@@ -10,6 +10,7 @@ import {
   timestamp,
   uniqueIndex,
   index,
+  bigint,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -320,3 +321,10 @@ export const addressesRelations = relations(addresses, ({ one, many }) => ({
   user: one(user, { fields: [addresses.userId], references: [user.id] }),
   orders: many(orders),
 }));
+
+export const rateLimit = pgTable("rate_limit", {
+  id: text("id").primaryKey(),
+  key: text("key").notNull(),
+  count: integer("count").notNull(),
+  lastRequest: bigint("last_request", { mode: "number" }).notNull(),
+});
