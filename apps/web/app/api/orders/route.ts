@@ -8,7 +8,14 @@ export async function POST(req: Request) {
   const { session, error } = await requireAuth();
   if (error) return error;
 
-  const { addressId } = await req.json();
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid or missing JSON body" }, { status: 400 });
+  }
+
+  const { addressId } = body;
   if (!addressId) return NextResponse.json({ error: "Missing addressId" }, { status: 400 });
 
   try {
