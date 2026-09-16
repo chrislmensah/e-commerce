@@ -4,6 +4,8 @@ import { db } from "@e-commerce/db";
 import { products, productVariants, inventory, categories } from "@e-commerce/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { adminWriteRateLimit  } from "@/lib/rate-limit";
+
 
 const variantSchema = z.object({
   size: z.string().min(1),
@@ -29,6 +31,11 @@ export async function POST(req: NextRequest) {
   const parsed = createProductSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const { success } = await adminWriteRateLimit.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests, please slow down" }, { status: 429 });
   }
 
   const { categoryId, name, description, basePrice, variants } = parsed.data;

@@ -3,10 +3,18 @@ import { orders, orderItems, carts, cartItems, inventory } from "@e-commerce/db/
 import { requireAuth } from "@e-commerce/auth";
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
+import { orderRateLimit } from "@/lib/rate-limit";
+
 
 export async function POST(req: Request) {
   const { session, error } = await requireAuth();
   if (error) return error;
+  
+  const rateLimitResult = await orderRateLimit.limit(session.user.id);
+  if (!rateLimitResult.success) {
+    return NextResponse.json({ error: "Rate limit exceeded. Please try again later." }, { status: 429 });
+  }
+
 
   let body;
   try {

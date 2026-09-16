@@ -4,6 +4,8 @@ import { db } from "@e-commerce/db";
 import { inventory, productVariants } from "@e-commerce/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { adminWriteRateLimit } from "@/lib/rate-limit";
+
 
 const updateInventorySchema = z.object({
   quantity: z.number().int().min(0),
@@ -16,6 +18,11 @@ export async function PATCH(
 ) {
   const { session, error } = await requireAdmin();
   if (error) return error;
+  
+  const { success } = await adminWriteRateLimit.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests, please slow down" }, { status: 429 });
+  }
 
   const { variantId } = await params;
 
@@ -31,6 +38,7 @@ export async function PATCH(
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
+  
 
   const [updated] = await db
     .update(inventory)

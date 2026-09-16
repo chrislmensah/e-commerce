@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { orders } from "@e-commerce/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { adminWriteRateLimit } from "@/lib/rate-limit";
 
 const statusSchema = z.object({
   status: z.enum(["pending", "paid", "processing", "shipped", "delivered", "cancelled"]),
@@ -15,6 +16,11 @@ export async function PATCH(
 ) {
   const { session, error } = await requireAdmin();
   if (error) return error;
+
+  const { success } = await adminWriteRateLimit.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests, please slow down" }, { status: 429 });
+  }
 
   const { orderId } = await params;
 
