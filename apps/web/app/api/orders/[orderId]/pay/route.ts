@@ -31,7 +31,9 @@ export async function POST(
   // Paystack expects amount in the smallest currency unit (pesewas for GHS, kobo for NGN)
   const amountInSubunit = Math.round(Number(order.totalAmount) * 100);
 
-  const paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
+  let paystackRes;
+try {
+  paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
@@ -49,9 +51,14 @@ export async function POST(
       },
     }),
   });
+} catch (err) {
+  return NextResponse.json(
+    { error: "Could not reach Paystack. Please try again." },
+    { status: 503 }
+  );
+}
 
-  const data = await paystackRes.json();
-
+const data = await paystackRes.json();
   if (!data.status) {
     return NextResponse.json({ error: data.message || "Failed to initialize payment" }, { status: 400 });
   }
