@@ -1,3 +1,3 @@
-export { auth } from "./auth";
-export * from "./src/helpers";
+export { auth } from "./src";
+export type { Session } from "./src";
 export { requireAuth, requireAdmin } from "./src/helpers";
