@@ -6,7 +6,7 @@
 
 A full e-commerce website and companion mobile app for a clothing brand, including a built-in admin/inventory panel. Website and app share a single backend API.
 
-- **Team:** 2 developers
+
 - **Status:** Planning / early development
 - **Target market:** Ghana (payments, currency, and delivery flows built around this)
 
